@@ -17,6 +17,7 @@ import psycopg2
 import pandas as pd
 
 from query_database import *
+from query_mydatabase import *
 import processDicoms
 
 from inputs_init import *
@@ -36,16 +37,21 @@ import mydatabase
 from sqlalchemy.orm import sessionmaker
 from add_records import *
 
+# to query biomatrix only needed
+import database
+from base import Base, engine
 
-class SendNew(object):
+
+class SendNewUpdate(object):
     """
     USAGE:
     =============
-    Send2DB = SendNew()
+    Send2DB = SendNewUpdate()
     """
     def __init__(self): 
         self.dataInfo = []
         self.queryData = Query() 
+        self.queryBio = QuerymyDatabase()
         self.load = Inputs_init()
         self.records = AddRecords()
         self.casesFrame = pd.DataFrame()
@@ -57,8 +63,36 @@ class SendNew(object):
         self.loadMorphology = Morphology()
         self.loadTexture = Texture()
         self.T2 = features_T2()  
+           
+    
+    def queryRadioData(self, StudyID, dateID):
+        """ Querying without known condition (e.g: mass, non-mass) if benign by assumption query only findings"""
+        #############################
+        ###### 1) Querying Research database for clinical, pathology, radiology data
+        #############################
+        print "Executing SQL connection..."
+        # Format query StudyID
+        if (len(StudyID) >= 4 ): fStudyID=StudyID
+        if (len(StudyID) == 3 ): fStudyID='0'+StudyID
+        if (len(StudyID) == 2 ): fStudyID='00'+StudyID
+        if (len(StudyID) == 1 ): fStudyID='000'+StudyID
         
-        
+        try:
+            ############# Query biomatrix
+            biomtx_Session = sessionmaker()
+            biomtx_Session.configure(bind=engine)  # once engine is available
+            sessionbiomtx = biomtx_Session() #instantiate a Session
+            
+            redateID = datetime.date(int(dateID[6:10]), int(dateID[3:5]), int(dateID[0:2]))
+            radiologyinfo = self.queryBio.queryBiomatrix(sessionbiomtx, fStudyID, redateID)
+                        
+        except Exception:
+            print "Not able to query biomatrix"
+            pass
+            
+        return radiologyinfo    
+    
+    
     def queryNewDatabase(self, StudyID, dateID, Diagnosis):
         """ Querying without known condition (e.g: mass, non-mass) if benign by assumption query only findings"""
         #############################
@@ -73,12 +107,7 @@ class SendNew(object):
            
         # perform query
         noproc = False
-        try:
-                ############# if by procDate
-                # Format query reprocdateID
-                #procdateID = datetime.date(int(dateID[6:10]), int(dateID[3:5]), int(dateID[0:2]))
-                #is_mass, colLabelsmass, is_nonmass, colLabelsnonmass = self.queryData.queryDatabasebyProc(fStudyID, procdateID)
-                      
+        try:       
                 ############# if by examDate
                 # Format query reprocdateID
                 redateID = datetime.date(int(dateID[6:10]), int(dateID[3:5]), int(dateID[0:2]))
@@ -201,7 +230,7 @@ class SendNew(object):
         #############################
         ###### Start by Loading 
         print "Start by loading volumes..."
-        data_loc='Z:\Cristina\MassNonmass'+os.sep+cond[:-1]
+        data_loc='Z:\Cristina\MassNonmass'+os.sep+cond
         
         [series_path, phases_series, self.lesionID_path] = self.load.readVolumes(data_loc, StudyID, DicomExamNumber, SeriesID, Lesionfile)
         print "Path to series location: %s" % series_path 
@@ -252,7 +281,7 @@ class SendNew(object):
             
             #self.loadDisplay.addT2visualize(self.load.T2Images, self.load.T2image_pos_pat, self.load.T2image_ori_pat, self.load.T2dims, self.load.T2spacing, interact=False)
         else:
-            self.loadDisplay.visualize(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, sub=True, postS=1, interact=False)
+            self.loadDisplay.visualize(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, sub=True, postS=1, interact=True)
         
         #############################
         ###### ELoad Segmentation and visualize
@@ -285,7 +314,7 @@ class SendNew(object):
         #############################
         ###### Start by Loading 
         print "Start by loading volumes..."
-        data_loc='Z:\Cristina\MassNonmass'+os.sep+cond[:-1]
+        data_loc='Z:\Cristina\MassNonmass'+os.sep+cond
         
         [series_path, phases_series, self.lesionID_path] = self.load.readVolumes(data_loc, StudyID, DicomExamNumber, SeriesID, Lesionfile)
         print "Path to series location: %s" % series_path 
@@ -325,7 +354,7 @@ class SendNew(object):
             
         print "\n Visualize volumes..."
         self.loadDisplay.addSegment(self.lesion3D, (1,0,0), interact=False)                             
-        #self.createSegment.saveSegmentation(self.pathSegment, self.lesion3D, lesionfilename=nameSegment+'.vtk') 
+        self.createSegment.saveSegmentation(self.pathSegment, self.lesion3D, lesionfilename=self.nameSegment) 
         
         #############################        
         ###### Extract T2 features, Process T2 and visualize
@@ -333,7 +362,7 @@ class SendNew(object):
         if (T2SeriesID != 'NONE'):     
             self.loadDisplay.visualize(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, sub=True, postS=4, interact=True)
             print "\n Visualize addT2visualize ..."
-            self.loadDisplay.addT2visualize(self.load.T2Images, self.load.T2image_pos_pat, self.load.T2image_ori_pat, self.load.T2dims, self.load.T2spacing, interact=True)
+            self.loadDisplay.addT2visualize(self.load.T2Images, self.load.T2image_pos_pat, self.load.T2image_ori_pat, self.load.T2dims, self.load.T2spacing, interact=False)
             
             if(lesion_id>0):
                 #transT2 = int(raw_input('\n Translate T2 by xf_T1? Yes:1 No:0 : '))
@@ -342,7 +371,7 @@ class SendNew(object):
                 self.load.T2image_pos_pat[0] = -self.loadDisplay.T2origin[2] 
                 
         else:
-            self.loadDisplay.visualize(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, sub=True, postS=1, interact=False)
+            self.loadDisplay.visualize(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, sub=True, postS=1, interact=True)
                                
         # extract annotation if any   
         findannot=False
@@ -412,13 +441,12 @@ class SendNew(object):
             print "\n Displaying picker for lesion segmentation"
             seeds = self.loadDisplay.display_pick(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, 4, LesionZslice)
             
-            seededlesion3D = self.createSegment.segmentFromSeeds(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, seeds, self.loadDisplay.iren1, self.loadDisplay.xImagePlaneWidget, self.loadDisplay.yImagePlaneWidget,  self.loadDisplay.zImagePlaneWidget)
-            self.loadDisplay.addSegment(seededlesion3D, (1,0,0), interact=False)
+            self.lesion3D = []
+            self.lesion3D = self.createSegment.segmentFromSeeds(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, seeds, self.loadDisplay.iren1, self.loadDisplay.xImagePlaneWidget, self.loadDisplay.yImagePlaneWidget,  self.loadDisplay.zImagePlaneWidget)
+            self.loadDisplay.addSegment(self.lesion3D, (1,0,0), interact=False)
             self.loadDisplay.picker.RemoveAllObservers()
             
             # save it to file	             
-            #self.createSegment.saveSegmentation(self.lesionID_path, seededlesion3D, lesionfilename=0) 
-            self.lesion3D = seededlesion3D
             self.createSegment.saveSegmentation(self.pathSegment,  self.lesion3D, lesionfilename=self.nameSegment) 
            
             axis_lengths = self.loadDisplay.extract_segment_dims(self.lesion3D)
@@ -562,12 +590,12 @@ class SendNew(object):
         ###### Extract Dynamic features
         #############################
         print "\n Extract Dynamic contour features..."
-        dyn_contour = self.loadDynamic.extractfeatures_contour(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, series_path, phases_series, lesion3D)
+        dyn_contour = self.loadDynamic.extractfeatures_contour(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, series_path, phases_series, self.lesion3D)
         print "\n=========================================="
         print dyn_contour
                 
         print "\n Extract Dynamic inside features..."
-        dyn_inside = self.loadDynamic.extractfeatures_inside(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, series_path, phases_series, lesion3D)
+        dyn_inside = self.loadDynamic.extractfeatures_inside(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, series_path, phases_series, self.lesion3D)
         print dyn_inside
         print "\n=========================================="
  
@@ -580,7 +608,7 @@ class SendNew(object):
         ###### Extract Morphology features
         #############################
         print "\n Extract Morphology features..."
-        morphofeatures = self.loadMorphology.extractfeatures(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, series_path, phases_series, lesion3D)
+        morphofeatures = self.loadMorphology.extractfeatures(self.load.DICOMImages, self.load.image_pos_pat, self.load.image_ori_pat, series_path, phases_series, self.lesion3D)
         print "\n=========================================="
         print morphofeatures
         print "\n=========================================="
@@ -619,7 +647,7 @@ class SendNew(object):
 #            if transT2:
 #                self.loadDisplay.addT2transvisualize(self.load.T2Images, self.load.T2image_pos_pat, self.load.T2image_ori_pat, self.load.T2dims, self.load.T2spacing, finding_side, interact=True)
 #                self.load.T2image_pos_pat[0] = -self.loadDisplay.T2origin[2] 
-    
+#    
             # Do extract_muscleSI 
             [T2_muscleSI, muscle_scalar_range]  = self.T2.load_muscleSI(self.load.T2Images, self.load.T2image_pos_pat, self.load.T2image_ori_pat, bounds_muscleSI, self.loadDisplay.iren1)
             print "ave. T2_muscleSI: %d" % mean(T2_muscleSI)
@@ -772,8 +800,19 @@ class SendNew(object):
                                             textureT2features['T2texture_correlation_zero'], textureT2features['T2texture_correlation_quarterRad'], textureT2features['T2texture_correlation_halfRad'], textureT2features['T2texture_correlation_threeQuaRad'], 
                                             textureT2features['T2texture_ASM_zero'], textureT2features['T2texture_ASM_quarterRad'], textureT2features['T2texture_ASM_halfRad'], textureT2features['T2texture_ASM_threeQuaRad'], 
                                             textureT2features['T2texture_energy_zero'], textureT2features['T2texture_energy_quarterRad'], textureT2features['T2texture_energy_halfRad'], textureT2features['T2texture_energy_threeQuaRad'])
+                                            
+        return
+        
     
     def addRecordDB_stage1(self, lesion_id, d_euclidean, earlySE, dce2SE, dce3SE, lateSE, ave_T2, network_meas):        
+        
+        # Send to database lesion info
+        self.records.stage1_2DB(lesion_id, d_euclidean, earlySE, dce2SE, dce3SE, lateSE, ave_T2, network_meas)
+              
+        return
+        
+    
+    def addRecordDB_radiology(self, lesion_id, ):        
         
         # Send to database lesion info
         self.records.stage1_2DB(lesion_id, d_euclidean, earlySE, dce2SE, dce3SE, lateSE, ave_T2, network_meas)

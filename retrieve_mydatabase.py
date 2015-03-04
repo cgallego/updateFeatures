@@ -80,13 +80,8 @@ class Retrieve(object):
         #############################
         print "Executing SQL local..."
         # perform query
-        [self.lesion, self.T2info] = self.queryDatalocal.query_withT2(lesion_id)           
-                
-        ## append collection of cases
-        self.casesFrame = pd.DataFrame(columns=self.lesion.__dict__.keys())
-        self.casesFrame = self.casesFrame.append(self.lesion.__dict__, ignore_index=True) # 20    
-        print self.casesFrame.iloc[0]
-        
+        self.T2info = self.queryDatalocal.query_withT2(lesion_id)           
+                        
         # ask for info about lesion row data from query
         self.T2caseFrame = pd.DataFrame(columns=self.T2info.__dict__.keys())
         self.T2caseFrame = self.T2caseFrame.append(self.T2info.__dict__, ignore_index=True) # 20    

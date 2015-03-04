@@ -583,3 +583,85 @@ class Stage1_record(Base):
         
     def __repr__(self):
         return "<Stage1_record(lesion_id='%s', V0='%s', V1='%s'')>" % (self.lesion_id, self.V0, self.V1)
+        
+        
+#  created a Annot_record mapping 
+class Radiology_record(Base):
+    """Base for Radiology_record class using Declarative. for table Radiology_record
+    attributes:
+        self.lesion_id = lesion_id
+        self.cad_pt_no_txt = 
+        self.latest_mutation = 
+        self.exam_dt_datetime
+        self.mri_cad_status_txt 
+        self.comment_txt
+        self.radiology_rpt_generated_yn
+        self.original_report_txt
+        self.sty_indicator_rout_screening_obsp_yn
+        self.sty_indicator_high_risk_yn
+        self.sty_indicator_high_risk_brca_1_yn
+        self.sty_indicator_high_risk_brca_2_yn
+        self.sty_indicator_high_risk_brca_1_or_2_yn
+        self.sty_indicator_high_risk_at_yn
+        self.sty_indicator_high_risk_other_gene_yn
+        self.sty_indicator_high_risk_prior_high_risk_marker_yn
+        self.sty_indicator_high_risk_prior_personal_can_hist_yn
+        self.sty_indicator_high_risk_hist_of_mantle_rad_yn
+        self.sty_indicator_high_risk_fam_hist_yn
+        self.sty_indicator_add_eval_as_folup_yn
+        self.sty_indicator_folup_after_pre_exam_yn
+        self.sty_indicator_pre_operative_extent_of_dis_yn
+        self.sty_indicator_post_operative_margin_yn
+        self.sty_indicator_pre_neoadj_trtmnt_yn
+        self.sty_indicator_prob_solv_diff_img_yn
+        self.sty_indicator_scar_vs_recurr_yn
+        self.sty_indicator_folup_recommend_yn
+        self.sty_indicator_prior_2_prophy_mast_yn
+    """
+    __tablename__ = 'radiologyInfo'
+    __table_args__ = {'autoload':True}
+    radio_id = Column(Integer, primary_key=True)
+    lesion_id = Column(Integer, ForeignKey('lesion.lesion_id'))
+        
+    def __init__(self, lesion_id, cad_pt_no_txt, latest_mutation, exam_dt_datetime, mri_cad_status_txt, comment_txt,
+                 original_report_txt,
+                 sty_indicator_rout_screening_obsp_yn, sty_indicator_high_risk_yn,
+                 sty_indicator_high_risk_brca_1_yn, sty_indicator_high_risk_brca_2_yn, sty_indicator_high_risk_brca_1_or_2_yn,
+                 sty_indicator_high_risk_at_yn, sty_indicator_high_risk_other_gene_yn, sty_indicator_high_risk_prior_high_risk_marker_yn,
+                 sty_indicator_high_risk_prior_personal_can_hist_yn, sty_indicator_high_risk_hist_of_mantle_rad_yn,
+                 sty_indicator_high_risk_fam_hist_yn, sty_indicator_add_eval_as_folup_yn, sty_indicator_folup_after_pre_exam_yn,
+                 sty_indicator_pre_operative_extent_of_dis_yn, sty_indicator_post_operative_margin_yn, sty_indicator_pre_neoadj_trtmnt_yn,
+                 sty_indicator_prob_solv_diff_img_yn, sty_indicator_scar_vs_recurr_yn, sty_indicator_folup_recommend_yn,
+                 sty_indicator_prior_2_prophy_mast_yn):
+        
+        self.lesion_id = lesion_id
+        self.cad_pt_no_txt = cad_pt_no_txt
+        self.latest_mutation = latest_mutation
+        self.exam_dt_datetime = exam_dt_datetime
+        self.mri_cad_status_txt = mri_cad_status_txt
+        self.comment_txt = comment_txt
+        self.original_report_txt = original_report_txt
+        self.sty_indicator_rout_screening_obsp_yn = sty_indicator_rout_screening_obsp_yn
+        self.sty_indicator_high_risk_yn = sty_indicator_high_risk_yn
+        self.sty_indicator_high_risk_brca_1_yn = sty_indicator_high_risk_brca_1_yn
+        self.sty_indicator_high_risk_brca_2_yn = sty_indicator_high_risk_brca_2_yn
+        self.sty_indicator_high_risk_brca_1_or_2_yn = sty_indicator_high_risk_brca_1_or_2_yn
+        self.sty_indicator_high_risk_at_yn = sty_indicator_high_risk_at_yn
+        self.sty_indicator_high_risk_other_gene_yn = sty_indicator_high_risk_other_gene_yn
+        self.sty_indicator_high_risk_prior_high_risk_marker_yn = sty_indicator_high_risk_prior_high_risk_marker_yn
+        self.sty_indicator_high_risk_prior_personal_can_hist_yn = sty_indicator_high_risk_prior_personal_can_hist_yn
+        self.sty_indicator_high_risk_hist_of_mantle_rad_yn = sty_indicator_high_risk_hist_of_mantle_rad_yn
+        self.sty_indicator_high_risk_fam_hist_yn = sty_indicator_high_risk_fam_hist_yn
+        self.sty_indicator_add_eval_as_folup_yn = sty_indicator_add_eval_as_folup_yn
+        self.sty_indicator_folup_after_pre_exam_yn = sty_indicator_folup_after_pre_exam_yn
+        self.sty_indicator_pre_operative_extent_of_dis_yn = sty_indicator_pre_operative_extent_of_dis_yn
+        self.sty_indicator_post_operative_margin_yn = sty_indicator_post_operative_margin_yn
+        self.sty_indicator_pre_neoadj_trtmnt_yn = sty_indicator_pre_neoadj_trtmnt_yn
+        self.sty_indicator_prob_solv_diff_img_yn = sty_indicator_prob_solv_diff_img_yn
+        self.sty_indicator_scar_vs_recurr_yn = sty_indicator_scar_vs_recurr_yn
+        self.sty_indicator_folup_recommend_yn = sty_indicator_folup_recommend_yn
+        self.sty_indicator_prior_2_prophy_mast_yn = sty_indicator_prior_2_prophy_mast_yn
+        
+        
+    def __repr__(self):
+        return "<Radiology_record(lesion_id='%s', radiology_rpt_generated_yn='%s')>" % (self.lesion_id, self.radiology_rpt_generated_yn)        
