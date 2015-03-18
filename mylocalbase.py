@@ -14,6 +14,7 @@ from sqlalchemy.orm import sessionmaker
 Session = sessionmaker()
 myengine = create_engine('sqlite:///C:\\Users\\windows\\Documents\\repoCode-local\\stage1features\\stage1localData.db', echo=False) # now on, when adding new cases
 localengine = create_engine('sqlite:///C:\\Users\\windows\\Documents\\repoCode-local\\updateFeatures\\updatedFeatures.db', echo=False) # now on, when adding new cases
+mynewengine = create_engine('sqlite:///C:\\Users\\windows\\Documents\\repoCode-local\\addnewLesion\\stage1T2localData.db', echo=False) # now on, when adding new cases
 
 
 # later, we create the engine

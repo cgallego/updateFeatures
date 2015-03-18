@@ -140,7 +140,6 @@ class CheckUpdate(object):
             path_rootFolder= 'C:/Users/windows/Documents/repoCode-local/stage1features'
             pathSegment = 'C:\Users\windows\Documents\repoCode-local\stage1features\seg+T2'
             
-            
             [path_T2Series, T2SeriesID] = Send2DB.processT2(T2SeriesID, img_folder, StudyID, DicomExamNumber)
             
             #############################                  
@@ -245,41 +244,6 @@ class CheckUpdate(object):
                     raise
                 finally:
                     self.session.close()
-
-            
-            
-            if chgStage1:
-                #############################
-                ###### 5) Extract new features from each DCE-T1 and from T2 using segmented lesion
-                #############################
-                newfeatures = newFeatures(Send2DB.load, Send2DB.loadDisplay)
-                [deltaS, t_delta, centerijk] = newfeatures.extract_MRIsamp(series_path, phases_series, self.lesion3D, T2SeriesID)
-                
-                # generate nodes from segmantation 
-                [nnodes, curveT, earlySE, dce2SE, dce3SE, lateSE, ave_T2, prop] = newfeatures.generateNodesfromKmeans(deltaS['i0'], deltaS['j0'], deltaS['k0'], deltaS, centerijk, T2SeriesID)    
-                [kmeansnodes, d_euclideanNodes] = prop
-                
-                # pass nodes to lesion graph
-                G = newfeatures.createGraph(nnodes, curveT, prop)                   
-            
-                [degreeC, closenessC, betweennessC, no_triangles, no_con_comp] = newfeatures.analyzeGraph(G)        
-                network_measures = [degreeC, closenessC, betweennessC, no_triangles, no_con_comp]
-                        
-                self.session = self.Session() #instantiate a Session
-                # Send to database lesion info
-                stage1_records = mylocaldatabase.Stage1_record(lesion_id, d_euclideanNodes, earlySE, dce2SE, dce3SE, lateSE, ave_T2, network_measures)
-                self.session.add(stage1_records)
-                print "\n====================Sending stage1_records to update db... "
-                
-                # Finally send records to database
-                try:
-                    self.session.commit()  
-                except:
-                    self.session.rollback()
-                    raise
-                finally:
-                    self.session.close()
-                    
                     
 
             if chgT2: 
@@ -300,6 +264,7 @@ class CheckUpdate(object):
                         print "\n bounds_muscleSI from file:"
                         print bounds_muscleSI
                         [T2_muscleSI, muscle_scalar_range, bounds_muscleSI, T2_lesionSI, lesion_scalar_range, LMSIR, morphoT2features, textureT2features] = Send2DB.T2_loadupdate(T2SeriesID, path_T2Series, self.lesion3D, pathSegment, nameSegment, sideBreast, bounds_muscleSI)
+                        #[T2_muscleSI, muscle_scalar_range, bounds_muscleSI, T2_lesionSI, lesion_scalar_range, LMSIR, morphoT2features, textureT2features] = Send2DB.T2_extract(T2SeriesID, path_T2Series, self.lesion3D, pathSegment, nameSegment, sideBreast)
                         # finally pick T2 BIRADS category
                         BIRADST2 = str(RetrieveDB.T2info.find_t2_signal_int)
                            
@@ -332,7 +297,41 @@ class CheckUpdate(object):
                     finally:
                         self.session.close()
                                      
-        
+
+            
+            
+            if chgStage1:
+                #############################
+                ###### 8) Extract new features from each DCE-T1 and from T2 using segmented lesion
+                #############################
+                newfeatures = newFeatures(Send2DB.load, Send2DB.loadDisplay)
+                [deltaS, t_delta, centerijk] = newfeatures.extract_MRIsamp(series_path, phases_series, self.lesion3D, T2SeriesID)
+                
+                # generate nodes from segmantation 
+                [nnodes, curveT, earlySE, dce2SE, dce3SE, lateSE, ave_T2, prop] = newfeatures.generateNodesfromKmeans(deltaS['i0'], deltaS['j0'], deltaS['k0'], deltaS, centerijk, T2SeriesID)    
+                [kmeansnodes, d_euclideanNodes] = prop
+                
+                # pass nodes to lesion graph
+                G = newfeatures.createGraph(nnodes, curveT, prop)                   
+            
+                [degreeC, closenessC, betweennessC, no_triangles, no_con_comp] = newfeatures.analyzeGraph(G)        
+                network_measures = [degreeC, closenessC, betweennessC, no_triangles, no_con_comp]
+                        
+                self.session = self.Session() #instantiate a Session
+                # Send to database lesion info
+                stage1_records = mylocaldatabase.Stage1_record(lesion_id, d_euclideanNodes, earlySE, dce2SE, dce3SE, lateSE, ave_T2, network_measures)
+                self.session.add(stage1_records)
+                print "\n====================Sending stage1_records to update db... "
+                
+                # Finally send records to database
+                try:
+                    self.session.commit()  
+                except:
+                    self.session.rollback()
+                    raise
+                finally:
+                    self.session.close()
+                            
             ## continue to next case
             line = file_ids.readline()
             print line

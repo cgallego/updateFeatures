@@ -643,11 +643,11 @@ class SendNewUpdate(object):
             
             print "\n Visualize addT2visualize ..."
             self.loadDisplay.addT2visualize(self.load.T2Images, self.load.T2image_pos_pat, self.load.T2image_ori_pat, self.load.T2dims, self.load.T2spacing, interact=False)
-#            transT2 = int(raw_input('\n Translate T2 by xf_T1? Yes:1 No:0 : '))
-#            if transT2:
-#                self.loadDisplay.addT2transvisualize(self.load.T2Images, self.load.T2image_pos_pat, self.load.T2image_ori_pat, self.load.T2dims, self.load.T2spacing, finding_side, interact=True)
-#                self.load.T2image_pos_pat[0] = -self.loadDisplay.T2origin[2] 
-#    
+            transT2 = int(raw_input('\n Translate T2 by xf_T1? Yes:1 No:0 : '))
+            if transT2:
+                self.loadDisplay.addT2transvisualize(self.load.T2Images, self.load.T2image_pos_pat, self.load.T2image_ori_pat, self.load.T2dims, self.load.T2spacing, finding_side, interact=True)
+                self.load.T2image_pos_pat[0] = -self.loadDisplay.T2origin[2] 
+    
             # Do extract_muscleSI 
             [T2_muscleSI, muscle_scalar_range]  = self.T2.load_muscleSI(self.load.T2Images, self.load.T2image_pos_pat, self.load.T2image_ori_pat, bounds_muscleSI, self.loadDisplay.iren1)
             print "ave. T2_muscleSI: %d" % mean(T2_muscleSI)

@@ -55,14 +55,14 @@ class Retrieve(object):
         print self.casesFrame.iloc[0]
         
         # ask for info about lesion row data from query
-        if(self.casesFrame['exam_find_mri_mass_yn']):
+        if(self.casesFrame['exam_find_mri_mass_yn'].iloc[0]):
             massrecord = self.lesion.mass_lesion[0]
             ## append collection of cases 
             self.massframe = pd.DataFrame(columns=massrecord.__dict__.keys()[1:])
             self.massframe = self.massframe.append(massrecord.__dict__, ignore_index=True)
             self.lesionFrame = self.massframe
             
-        if(self.casesFrame['exam_find_mri_nonmass_yn']):
+        if(self.casesFrame['exam_find_mri_nonmass_yn'].iloc[0]):
             nonmassrecord = self.lesion.nonmass_lesion[0]
             ## append collection of cases 
             self.nonmassframe = pd.DataFrame(columns=nonmassrecord.__dict__.keys()[1:])
